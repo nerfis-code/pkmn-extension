@@ -21,7 +21,7 @@ public:
 	void _process(double delta) override;
 
     void write(godot::String input);
-    void handle_chunk(const char *action);
+    void _stdin(godot::String in);
 protected:
 	static void _bind_methods();
     

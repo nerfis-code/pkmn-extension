@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "@pkmn/dex": "^0.10.11",
     "@pkmn/randoms": "^0.10.9",
     "@pkmn/sim": "^0.10.9"
   },

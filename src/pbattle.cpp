@@ -1,4 +1,5 @@
 #include "pbattle.h"
+#include "jsrutime.h"
 
 #include <cctype>
 #include <cstdint>
@@ -32,6 +33,10 @@
 #include <godot_cpp/variant/callable.hpp>
 #include <godot_cpp/variant/variant.hpp>
 
+extern "C" {
+#include "quickjs.h"
+}
+
 using json = nlohmann::json;
 using namespace godot;
 
@@ -39,6 +44,7 @@ void PBattle::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("completed", "vr"), &PBattle::completed);
 	// TODO: cambiar los nombre write y fragment por choose y choice
 	ClassDB::bind_method(D_METHOD("write", "fragment"), &PBattle::write);
+	ClassDB::bind_method(D_METHOD("_stdin", "fragment"), &PBattle::_stdin);
 }
 
 PBattle::PBattle() {}
@@ -57,50 +63,6 @@ PBattle::~PBattle() {
 	}
 }
 
-std::string read_file(const char *path) {
-	String ssource = FileAccess::open(String(path), FileAccess::READ)->get_as_text();
-	std::string source = ssource.utf8().get_data();
-
-	return source;
-}
-
-JSValue js_console_log(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-	PBattle *sd = static_cast<PBattle *>(JS_GetContextOpaque(ctx));
-
-	for (int i = 0; i < argc; i++) {
-		const char *output = JS_ToCString(ctx, argv[i]);
-
-		if (output == nullptr) {
-			continue;
-		}
-
-		sd->handle_chunk(output);
-
-		JS_FreeCString(ctx, output);
-	}
-	return JS_UNDEFINED;
-}
-
-void install_console(JSContext *ctx) {
-	JSValue globalthis = JS_GetGlobalObject(ctx);
-	JSValue console = JS_NewObject(ctx);
-	JSValue log = JS_NewCFunction(ctx, &js_console_log, "log", 1);
-
-	JS_SetPropertyStr(ctx, console, "log", log);
-	JS_SetPropertyStr(ctx, globalthis, "console", console);
-	JS_FreeValue(ctx, globalthis);
-}
-
-void print_exception(JSContext *ctx) {
-	JSValue exception = JS_GetException(ctx);
-	const char *error_str = JS_ToCString(ctx, exception);
-	if (error_str != nullptr) {
-		print_error(error_str);
-		JS_FreeCString(ctx, error_str);
-	}
-	JS_FreeValue(ctx, exception);
-}
-
 struct Move {
 	std::string move;
 	std::string id;
@@ -117,9 +79,8 @@ void from_json(const json &j, Move &m) {
 	m.disabled = j.value("disabled", false);
 }
 
-void PBattle::handle_chunk(const char *chunk) {
-	String chunk_ = chunk;
-	action_queue_.append_array(chunk_.split("\n"));
+void PBattle::_stdin(godot::String in) {
+	action_queue_.append_array(in.split("\n"));
 }
 
 struct ParsedBattleLine {
@@ -254,7 +215,7 @@ void PBattle::handle_action(String action) {
 										.to_lower()
 										.replace("-", "")
 										.replace(" ", "");
-			String sprite_path = String("res://grafics/pokemon/gen3_back/" + pokemon_id + ".png");
+			String sprite_path = String("res://graphics/pokemon/gen3_back/" + pokemon_id + ".png");
 
 			print_line(sprite_path);
 
@@ -273,7 +234,7 @@ void PBattle::handle_action(String action) {
 			hp_bar->set_value(hp_diff[0].to_int());
 		} else if (ident_pokemon[0] == "p2a") {
 			String pokemon_id = ident_pokemon[1].to_lower().replace("-", "");
-			String sprite_path = String("res://grafics/pokemon/gen3/" + pokemon_id + ".png");
+			String sprite_path = String("res://graphics/pokemon/gen3/" + pokemon_id + ".png");
 
 			print_line(sprite_path);
 

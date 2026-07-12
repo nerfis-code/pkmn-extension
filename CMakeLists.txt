@@ -47,6 +47,7 @@ target_sources(${LIBNAME}
     src/register_types.cpp
     src/register_types.h
     src/pbattle.cpp
+    src/pserver.cpp
 )
 
 target_link_libraries(${LIBNAME} PRIVATE godot-cpp qjs nlohmann_json::nlohmann_json)

@@ -8,6 +8,7 @@
 #include <godot_cpp/core/gdvirtual.gen.inc>
 
 #include "pbattle.h"
+#include "pserver.h"
 
 using namespace godot;
 
@@ -16,6 +17,7 @@ void initialize_gdextension_types(ModuleInitializationLevel p_level) {
 		return;
 	}
 	GDREGISTER_CLASS(PBattle);
+	GDREGISTER_CLASS(PServer);
 }
 
 void uninitialize_gdextension_types(ModuleInitializationLevel p_level) {

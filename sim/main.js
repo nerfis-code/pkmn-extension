@@ -1,6 +1,5 @@
 import {Dex, BattleStreams, RandomPlayerAI, Teams} from '@pkmn/sim';
 import {TeamGenerators} from '@pkmn/randoms';
-
 Teams.setGeneratorFactory(TeamGenerators);
 
 const streams = BattleStreams.getPlayerStreams(new BattleStreams.BattleStream());
