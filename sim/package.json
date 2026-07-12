@@ -1,0 +1,20 @@
+{
+  "dependencies": {
+    "@pkmn/randoms": "^0.10.9",
+    "@pkmn/sim": "^0.10.9"
+  },
+  "name": "sim",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "esbuild": "0.28.1"
+  }
+}
