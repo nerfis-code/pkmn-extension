@@ -42,8 +42,8 @@ using namespace godot;
 
 void PBattle::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("completed", "vr"), &PBattle::completed);
-	// TODO: cambiar los nombre write y fragment por choose y choice
-	ClassDB::bind_method(D_METHOD("write", "fragment"), &PBattle::write);
+	ClassDB::bind_method(D_METHOD("choose", "choice"), &PBattle::choose);
+	ClassDB::bind_method(D_METHOD("start", "player_name", "packed_team"), &PBattle::start);
 	ClassDB::bind_method(D_METHOD("_stdin", "fragment"), &PBattle::_stdin);
 }
 
@@ -206,51 +206,12 @@ void PBattle::handle_action(String action) {
 	} else if (args[0] == "switch") { // |switch|p1a: Arbok|Arbok, L78, M|254/254
 		ERR_FAIL_COND_MSG(args.size() < 4, "Los args del actions switch deben tener al menos una longitud de 4");
 
-		PackedStringArray ident_pokemon = args[1].split(": "); // p1a: Growlithe
-		ERR_FAIL_COND_MSG(ident_pokemon.size() < 2, "ident_pokemon debe contener 2 elementos");
+		String ident = args[1]; // p1a: Growlithe
 
-		if (ident_pokemon[0] == "p1a") {
-			// TODO: se debe incluir una funcion que formate los nombres a id validos
-			String pokemon_id = ident_pokemon[1]
-										.to_lower()
-										.replace("-", "")
-										.replace(" ", "");
-			String sprite_path = String("res://graphics/pokemon/gen3_back/" + pokemon_id + ".png");
-
-			print_line(sprite_path);
-
-			Sprite2D *sprite = Object::cast_to<Sprite2D>(battle_scene_->get("player_pokemon"));
-			Ref<Texture2D> texture = ResourceLoader::get_singleton()->load(sprite_path);
-
-			sprite->set_texture(texture);
-
-			Label *label = Object::cast_to<Label>(battle_scene_->get("player_label"));
-			label->set_text(pokemon_id);
-
-			ProgressBar *hp_bar = Object::cast_to<ProgressBar>(battle_scene_->get("player_hp_bar"));
-
-			PackedStringArray hp_diff = args[3].split("/");
-			hp_bar->set_max(hp_diff[1].to_int());
-			hp_bar->set_value(hp_diff[0].to_int());
-		} else if (ident_pokemon[0] == "p2a") {
-			String pokemon_id = ident_pokemon[1].to_lower().replace("-", "");
-			String sprite_path = String("res://graphics/pokemon/gen3/" + pokemon_id + ".png");
-
-			print_line(sprite_path);
-
-			Sprite2D *sprite = Object::cast_to<Sprite2D>(battle_scene_->get("foe_pokemon"));
-			Ref<Texture2D> texture = ResourceLoader::get_singleton()->load(sprite_path);
-
-			sprite->set_texture(texture);
-
-			Label *label = Object::cast_to<Label>(battle_scene_->get("foe_label"));
-			label->set_text(pokemon_id);
-
-			ProgressBar *hp_bar = Object::cast_to<ProgressBar>(battle_scene_->get("foe_hp_bar"));
-			PackedStringArray hp_diff = args[3].split("/");
-			hp_bar->set_max(hp_diff[1].to_int());
-			hp_bar->set_value(hp_diff[0].to_int());
-		}
+		PackedStringArray hp_diff = args[3].split("/");
+		int max_hp = hp_diff[1].to_int();
+		int hp = hp_diff[0].to_int();
+		battle_scene_->call("switch", ident, max_hp, hp);
 	} else if (args[0] == "win") {
 		animation("message", { vformat("%s win!\n", args[1]) });
 	} else if (args[0] == "faint") {
@@ -323,13 +284,13 @@ void PBattle::handle_action(String action) {
 	}
 }
 
-void PBattle::write(String fragment) {
+void PBattle::choose(String choice) {
 	JSValue global_obj = JS_GetGlobalObject(context_);
-	JSValue func = JS_GetPropertyStr(context_, global_obj, "write");
+	JSValue func = JS_GetPropertyStr(context_, global_obj, "choose");
 
 	if (JS_IsFunction(context_, func)) {
 		JSValue args[1];
-		args[0] = JS_NewString(context_, fragment.utf8().get_data());
+		args[0] = JS_NewString(context_, choice.utf8().get_data());
 
 		JSValue result = JS_Call(context_, func, JS_UNDEFINED, 1, args);
 
@@ -339,7 +300,7 @@ void PBattle::write(String fragment) {
 		JS_FreeValue(context_, result);
 		JS_FreeValue(context_, args[0]);
 	} else {
-		print_error("write not found");
+		print_error("function choose not found");
 	}
 
 	JS_FreeValue(context_, func);
@@ -348,12 +309,36 @@ void PBattle::write(String fragment) {
 	battle_scene_->call("hide_options");
 }
 
+void PBattle::start(String player_name, String packed_team) {
+	JSValue global_obj = JS_GetGlobalObject(context_);
+	JSValue func = JS_GetPropertyStr(context_, global_obj, "joinBattle");
+
+	if (JS_IsFunction(context_, func)) {
+		JSValue args[2];
+		args[0] = JS_NewString(context_, player_name.utf8().get_data());
+		args[1] = JS_NewString(context_, packed_team.utf8().get_data());
+
+		JSValue result = JS_Call(context_, func, JS_UNDEFINED, 1, args);
+
+		if (JS_IsException(result))
+			print_exception(context_);
+
+		JS_FreeValue(context_, result);
+		JS_FreeValue(context_, args[0]);
+		JS_FreeValue(context_, args[1]);
+	} else {
+		print_error("function joinBattle not found");
+	}
+
+	JS_FreeValue(context_, func);
+	JS_FreeValue(context_, global_obj);
+}
+
 void PBattle::animation(String func, Array argv) {
 	Dictionary anim;
 	anim["animation"] = func;
 	anim["argv"] = argv;
 	animation_queue_.push_back(anim);
-	// battle_scene_->call("animate", func, argv);
 }
 
 void PBattle::animate() {
@@ -366,7 +351,6 @@ void PBattle::completed(Variant vr) {
 	if (!animation_queue_.is_empty()) {
 		animate();
 	}
-	// print_line("se ha finalizado el GDScriptFunctionState");
 }
 
 void PBattle::_ready() {
@@ -390,31 +374,20 @@ void PBattle::_ready() {
 	JS_SetContextOpaque(context_, this);
 	install_console(context_);
 
-	std::string source = read_file("res://bin/index.js");
+	// std::string source = read_file("res://bin/index.js");
 
-	ERR_FAIL_COND_MSG(source.empty(), "No se pudo leer el script: res://bin/index.js");
+	// ERR_FAIL_COND_MSG(source.empty(), "No se pudo leer el script: res://bin/index.js");
 
-	JSValue res = JS_Eval(context_, source.c_str(), source.length(), "<SOURCE>", JS_EVAL_TYPE_GLOBAL);
-	if (JS_IsException(res))
-		print_exception(context_);
-	JS_FreeValue(context_, res);
+	// JSValue res = JS_Eval(context_, source.c_str(), source.length(), "<SOURCE>", JS_EVAL_TYPE_GLOBAL);
+	// if (JS_IsException(res))
+	// 	print_exception(context_);
+	// JS_FreeValue(context_, res);
 
 	// ───────────────────────────────────────────────
 	//    Configuración del escenario de combate
 	// ───────────────────────────────────────────────
 	battle_scene_ = get_parent();
-
 	battle_scene_->connect("animation_completed", Callable(this, "completed"));
-
-	Node *moveset_container = Object::cast_to<Node>(battle_scene_->get("moveset_container"));
-	auto btns = moveset_container->get_children();
-	//TODO los botones que no poseen un movimiento asignado deberian estar oculto
-	//TODO asignar el tag de el movimiento en este loop
-	for (int i = 0; i < btns.size(); i++) {
-		Button *btn = Object::cast_to<Button>(btns[i]);
-		std::string choice = std::string("move ") + std::to_string(i + 1);
-		btn->connect("pressed", Callable(this, "write").bind(choice.c_str()));
-	}
 }
 
 void PBattle::_process(double delta) {

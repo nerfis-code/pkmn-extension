@@ -20,8 +20,9 @@ public:
 	void _ready() override;
 	void _process(double delta) override;
 
-    void write(godot::String input);
-    void _stdin(godot::String in);
+  void choose(godot::String input);
+  void _stdin(godot::String in);
+	void start(godot::String player_name, godot::String packed_team);
 protected:
 	static void _bind_methods();
     

@@ -16,12 +16,12 @@ public:
 	PServer();
 	~PServer();
 
-  void _ready() override;
-  godot::String get_species(godot::String species) const;
-  void _stdin(godot::String in);
+	void _ready() override;
+	godot::String get_species(godot::String species) const;
+	void _stdin(godot::String in);
 protected:
 	static void _bind_methods();
-    
+
 private:
 	JSRuntime *runtime_ = nullptr;
 	JSContext *context_ = nullptr;
