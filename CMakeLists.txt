@@ -40,6 +40,27 @@ project(pokedot-expansion
     LANGUAGES CXX C
 )
 
+set(BUNDLED_JS ${CMAKE_CURRENT_BINARY_DIR}/bundle.js)
+set(GENERATED_C ${CMAKE_CURRENT_BINARY_DIR}/out.c)
+
+add_custom_command(
+  OUTPUT  ${BUNDLED_JS}
+  COMMAND npx.cmd --yes esbuild ${CMAKE_CURRENT_SOURCE_DIR}/sim/main.js --bundle --format=esm --outfile=${BUNDLED_JS}
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/sim/main.js
+  COMMENT "Bundling index.js con esbuild"
+  VERBATIM
+)
+
+add_custom_command(
+  OUTPUT  ${GENERATED_C}
+  COMMAND qjsc -N qjsc_out -m -o ${GENERATED_C} ${BUNDLED_JS}
+  DEPENDS qjsc ${BUNDLED_JS}
+  COMMENT "Compilando bundle.js a bytecode C (out.c) con qjsc"
+  VERBATIM
+)
+
+add_custom_target(generate_bytecode DEPENDS ${GENERATED_C})
+
 add_library(${LIBNAME} SHARED)
 
 target_sources(${LIBNAME}
@@ -48,9 +69,12 @@ target_sources(${LIBNAME}
     src/register_types.h
     src/pbattle.cpp
     src/pserver.cpp
+    ${GENERATED_C}
 )
 
-target_link_libraries(${LIBNAME} PRIVATE godot-cpp qjs nlohmann_json::nlohmann_json)
+add_dependencies(${LIBNAME} generate_bytecode)
+
+target_link_libraries(${LIBNAME} PRIVATE godot-cpp qjs qjs-libc nlohmann_json::nlohmann_json)
 
 set_property(TARGET ${LIBNAME} PROPERTY CXX_STANDARD 23)
 

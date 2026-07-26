@@ -10,32 +10,36 @@ extern "C" {
 #include "quickjs.h"
 }
 
-class PBattle : public godot::Node {
-	GDCLASS(PBattle, godot::Node)
+class PBattlePeer : public godot::RefCounted {
+	GDCLASS(PBattlePeer, godot::RefCounted)
+
 public:
-	PBattle();
-	~PBattle();
+	~PBattlePeer();
 
-	void completed(godot::Variant vr);
-	void _ready() override;
-	void _process(double delta) override;
+	enum State {
+		STATE_CONNECTING,
+		STATE_OPEN,
+		STATE_CLOSED
+	};
 
-  void choose(godot::String input);
-  void _stdin(godot::String in);
-	void start(godot::String player_name, godot::String packed_team);
+	void prepare(godot::String player_name, godot::String packed_team);
+	void start();
+	void poll();
+	int get_ready_state();
+	int get_available_packet_count();
+	godot::String get_packet();
+	void send(godot::String packet);
+	void _stdin(godot::String in);
+
 protected:
 	static void _bind_methods();
-    
-private:
-	void handle_action(godot::String action);
-	void animation(godot::String func, godot::Array argv);
-	void animate();
 
-	godot::Node *battle_scene_ = nullptr;
+private:
+	State ready_state_ = STATE_CONNECTING;
+	godot::TypedArray<godot::String> packet_queue_{};
 	JSRuntime *runtime_ = nullptr;
 	JSContext *context_ = nullptr;
 	JSContext *job_context_ = nullptr;
-	bool active_request_ = false;
-	godot::PackedStringArray action_queue_{};
-	godot::TypedArray<godot::Dictionary> animation_queue_{};
 };
+
+VARIANT_ENUM_CAST(PBattlePeer::State);

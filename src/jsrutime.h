@@ -7,7 +7,7 @@ extern "C" {
 }
 
 inline JSValue js_console_log(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv) {
-	godot::Node *sd = static_cast<godot::Node *>(JS_GetContextOpaque(ctx));
+	godot::Object *sd = static_cast<godot::Object *>(JS_GetContextOpaque(ctx));
 
 	for (int i = 0; i < argc; i++) {
 		const char *output = JS_ToCString(ctx, argv[i]);
