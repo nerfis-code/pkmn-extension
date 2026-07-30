@@ -1,2 +1,3 @@
 .\node_modules\.bin\esbuild main.js --minify --bundle --outfile="index.js"
 .\node_modules\.bin\esbuild dex.js --minify --bundle --outfile="pokedex.js"
+.\node_modules\.bin\esbuild u.js --bundle --outfile="client.js"

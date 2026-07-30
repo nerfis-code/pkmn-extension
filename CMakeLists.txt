@@ -69,6 +69,7 @@ target_sources(${LIBNAME}
     src/register_types.h
     src/pbattle.cpp
     src/pserver.cpp
+    src/pclient.cpp
     ${GENERATED_C}
 )
 

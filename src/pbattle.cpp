@@ -61,6 +61,13 @@ void PBattlePeer::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("send", "packet"), &PBattlePeer::send);
 }
 
+PBattlePeer::PBattlePeer() {
+	runtime_ = JS_NewRuntime();
+	context_ = JS_NewContext(runtime_);
+
+	JS_SetContextOpaque(context_, this);
+}
+
 PBattlePeer::~PBattlePeer() {
 	if (context_ != nullptr) {
 		JS_FreeContext(context_);
@@ -77,13 +84,6 @@ PBattlePeer::~PBattlePeer() {
 }
 
 void PBattlePeer::prepare(godot::String player_name, godot::String packed_team) {
-	packet_queue_.clear();
-
-	runtime_ = JS_NewRuntime();
-	context_ = JS_NewContext(runtime_);
-
-	JS_SetContextOpaque(context_, this);
-
 	JSValue global_obj = JS_GetGlobalObject(context_);
 	// TODO: es buena idea borrar estos string de memoria
 	JS_SetPropertyStr(context_, global_obj, "p1Name", JS_NewString(context_, player_name.utf8().get_data()));

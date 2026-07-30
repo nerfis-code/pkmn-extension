@@ -14,6 +14,7 @@ class PBattlePeer : public godot::RefCounted {
 	GDCLASS(PBattlePeer, godot::RefCounted)
 
 public:
+	PBattlePeer();
 	~PBattlePeer();
 
 	enum State {

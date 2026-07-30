@@ -1,8 +1,12 @@
 {
   "dependencies": {
+    "@pkmn/client": "^0.7.3",
+    "@pkmn/data": "^0.10.11",
     "@pkmn/dex": "^0.10.11",
+    "@pkmn/protocol": "^0.7.3",
     "@pkmn/randoms": "^0.10.9",
-    "@pkmn/sim": "^0.10.9"
+    "@pkmn/sim": "^0.10.9",
+    "@pkmn/view": "^0.7.3"
   },
   "name": "sim",
   "version": "1.0.0",

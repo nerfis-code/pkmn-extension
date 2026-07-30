@@ -9,6 +9,7 @@
 
 #include "pbattle.h"
 #include "pserver.h"
+#include "pclient.h"
 
 using namespace godot;
 
@@ -18,6 +19,7 @@ void initialize_gdextension_types(ModuleInitializationLevel p_level) {
 	}
 	GDREGISTER_CLASS(PBattlePeer);
 	GDREGISTER_CLASS(PServer);
+	GDREGISTER_CLASS(PClient);
 }
 
 void uninitialize_gdextension_types(ModuleInitializationLevel p_level) {
