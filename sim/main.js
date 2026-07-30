@@ -3,6 +3,7 @@ import { TeamGenerators } from '@pkmn/randoms';
 
 Teams.setGeneratorFactory(TeamGenerators);
 
+console.log("SIM started");
 const p1Name = globalThis.p1Name || "nerfis"
 const p1PackedTeam = globalThis.p1PackedTeam || 'Arcanine||Leftovers|Intimidate|Flareblitz,Extremespeed,Wildcharge,Morningsun|Impish|252,0,252,0,4,0||||||||'
 
@@ -33,3 +34,5 @@ void streams.omniscient.write(`>start ${JSON.stringify(spec)}
 >player p2 ${JSON.stringify(p2spec)}`);
 
 streams.omniscient.write('>p1 team 1');
+
+scene.anim("fuck_you")
